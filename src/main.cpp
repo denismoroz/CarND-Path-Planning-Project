@@ -9,7 +9,11 @@
 #include "Eigen-3.3/Eigen/QR"
 #include "json.hpp"
 #include "spline.h"
+#include "road.h"
+#include "vehicle.h"
+#include "planner.h"
 
+using namespace ppp;
 using namespace std;
 
 // for convenience
@@ -160,6 +164,9 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s, const vec
 
 }
 
+
+
+
 int main() {
   uWS::Hub h;
 
@@ -201,8 +208,19 @@ int main() {
   int lane = 1;
   double ref_vel = 0; // mph
 
+  Vehicle car;
+  Planner planner(&car);
 
-  h.onMessage([&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy, &lane, &ref_vel](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
+
+  h.onMessage([&map_waypoints_x,
+               &map_waypoints_y,
+               &map_waypoints_s,
+               &map_waypoints_dx,
+               &map_waypoints_dy,
+               &lane,
+               &ref_vel,
+               &planner,
+               &car](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
@@ -236,8 +254,30 @@ int main() {
           	double end_path_s = j[1]["end_path_s"];
           	double end_path_d = j[1]["end_path_d"];
 
+
+           car.update(car_x, car_y, car_speed, car_s, car_d, car_yaw);
+           car.set_previous_x_and_y(previous_path_x, previous_path_y);
+           car.set_end_path_s_and_d(end_path_s, end_path_d);
+
+
           	// Sensor Fusion Data, a list of all other cars on the same side of the road.
           	auto sensor_fusion = j[1]["sensor_fusion"];
+
+           Road road;
+
+           for (int i=0; i< sensor_fusion.size(); i++) {
+             int id = sensor_fusion[i][0];
+             double x = sensor_fusion[i][1];
+             double y = sensor_fusion[i][2];
+             double vx = sensor_fusion[i][3];
+             double vy = sensor_fusion[i][4];
+             double v = sqrt(vx*vx + vy*vy);
+
+             double s = sensor_fusion[i][5];
+             double d = sensor_fusion[i][6];
+
+             road.add(Vehicle(id, x, y, v, s, d));
+           }
 
 
           	// START
@@ -248,39 +288,19 @@ int main() {
           	  car_s = end_path_s;
           	}
 
-          	bool too_close = false;
 
-          	for(int i=0; i < sensor_fusion.size(); i++) {
-          	   float d = sensor_fusion[i][6];
+          	NextAction a = planner.check(road);
 
-          	   if (d < (2+4*lane+2) && d > (2+4*lane-2)) {
-          	     double vx = sensor_fusion[i][3];
-          	     double vy = sensor_fusion[i][4];
-          	     double check_speed = sqrt(vx*vx+ vy*vy);
-          	     double check_car_s = sensor_fusion[i][5];
+          	lane = a.lane;
 
-          	     check_car_s += ((double)prev_size*0.02*check_speed);
-
-          	     if((check_car_s > car_s) && ((check_car_s-car_s) < 30)) {
-
-          	         too_close = true;
-
-          	         if (lane > 0) {
-          	           lane = 0;
-          	         }
-          	     }
-
-          	   }
-
+          	if (a.velocity_change > 0) {
+          	  if (ref_vel < 49.5) {
+          	    ref_vel += a.velocity_change;
+          	  }
           	}
-
-          	if (too_close) {
-          	    ref_vel -= 0.224;
+          	else {
+          	  ref_vel += a.velocity_change;
           	}
-          	else if (ref_vel < 49.5){
-          	    ref_vel += 0.224;
-          	}
-
 
           	vector<double> ptsx;
           	vector<double> ptsy;
