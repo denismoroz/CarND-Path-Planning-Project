@@ -1,6 +1,7 @@
 #ifndef PLANNER_H
 #define PLANNER_H
 
+#include <memory>
 #include "vehicle.h"
 #include "road.h"
 #include "map.h"
