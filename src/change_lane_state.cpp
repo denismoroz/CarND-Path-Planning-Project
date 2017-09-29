@@ -9,11 +9,14 @@ ppp::NextAction ppp::ChangeLaneState::next_action() {
    if (_desired_lane == lane) {
      _planner->state = PlannerStatePtr(new KeepLaneState(_planner));
    }
-   else {
-     if (!_planner->is_save_to_change_line(_desired_lane)) {
-         _desired_lane = lane;
-     }
-   }
+//   else {
+//     if (!_planner->is_save_to_change_line(_desired_lane)) {
+//         _desired_lane = lane;
+//     }
+//     if (_planner->is_too_close()) {
+//       return NextAction(_desired_lane, -INC_VELOCITY);
+//     }
+//   }
 
    return NextAction(_desired_lane, INC_VELOCITY);
 }

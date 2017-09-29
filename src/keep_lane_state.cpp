@@ -14,7 +14,7 @@ ppp::NextAction ppp::KeepLaneState::next_action() {
            return NextAction(lane-1, INC_VELOCITY);
         }
     }
-    if (lane < 2) {
+    if (lane <= 1) {
        if (_planner->is_save_to_change_line(lane + 1)) {
            _planner->state = PlannerStatePtr(new ChangeLaneState(lane+1, _planner));
            return NextAction(lane+1, INC_VELOCITY);

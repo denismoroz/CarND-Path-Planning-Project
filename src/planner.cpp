@@ -21,8 +21,9 @@ bool ppp::Planner::is_too_close() {
  double prev_size = car->get_previous_x().size();
 
  for(auto v: road.get_vehicles_on_lane(car->get_lane())) {
-
     double check_car_s = v.get_s();
+    //check_car_s += ((double)prev_size*0.02*v.get_v());
+
     if((check_car_s > car->get_s()) && ((check_car_s-car->get_s()) < FRONT_SAFE_DISTANCE)) {
          return true;
     }

@@ -46,10 +46,9 @@ typedef unique_ptr<PlannerState> PlannerStatePtr;
 
 
 
-#define BUFFER_SIZE 32 // m
 #define BACK_BUFFER_SIZE 15
 #define INC_VELOCITY 0.224
-#define FRONT_SAFE_DISTANCE 35
+#define FRONT_SAFE_DISTANCE 40
 
 class Planner {
 
