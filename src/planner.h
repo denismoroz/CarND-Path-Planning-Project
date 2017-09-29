@@ -4,7 +4,6 @@
 #include "vehicle.h"
 #include "road.h"
 
-
 using namespace std;
 
 namespace ppp {
@@ -25,97 +24,48 @@ public:
 
 };
 
-#define BUFFER_SIZE 32 // m
-#define INC_VELOCITY 0.224
+class Planner;
 
-class Planner {
-  Vehicle* _car;
-  Road _road;
-  int _desired_lane = 1;
-
-  bool _is_too_close() {
-
-    double prev_size = _car->get_previous_x().size();
-
-    for(auto v: _road.get_vehicles_on_lane(_car->get_lane())) {
-
-       double check_car_s = v.get_s();
-       //check_car_s += ((double)prev_size*0.02*v.get_v());
-
-       if((check_car_s > _car->get_s()) && ((check_car_s-_car->get_s()) < 35)) {
-            return true;
-       }
-    }
-    return false;
-  }
-
-  bool _is_save_to_change_line(double lane) {
-    for (auto v: _road.get_vehicles_on_lane(lane)) {
-      double distance = v.get_s() - _car->get_s();
-
-      if (distance > 0) {
-        if (distance < BUFFER_SIZE)
-        {
-          return false;
-        }
-      }
-      else {
-        distance = std::abs(distance);
-        if (distance < 15 && v.get_v() >=_car->get_v()) {
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-
+class PlannerState {
+protected:
+  Planner *_planner;
 
 public:
-  Planner(Vehicle* car):
-    _car(car)
-  {
+  PlannerState(Planner* planner) : _planner(planner) {
 
   }
 
-
-  NextAction check(const Road& road) {
-     _road = road;
-
-     int lane = _car->get_lane();
-
-     if (_desired_lane != lane) {
-       return NextAction(_desired_lane, INC_VELOCITY);
-     }
-
-     if (!_is_too_close()) {
-
-       if (lane != 1) {
-           if (_is_save_to_change_line(1)) {
-               _desired_lane = 1;
-               return NextAction(1, INC_VELOCITY);
-           }
-       }
-       return NextAction(lane, INC_VELOCITY);
-     }
-     else {
-       if (lane >= 1) {
-         if (_is_save_to_change_line(lane - 1)) {
-           _desired_lane = lane - 1;
-           return NextAction(_desired_lane, INC_VELOCITY);
-         }
-       }
-       if (lane < 2) {
-         if (_is_save_to_change_line(lane + 1)) {
-             _desired_lane = lane + 1;
-            return NextAction(_desired_lane, INC_VELOCITY);
-         }
-       }
-       return NextAction(lane, -INC_VELOCITY);
-     }
-
+  PlannerState(const PlannerState& other) {
+    _planner = other._planner;
   }
+
+  virtual NextAction next_action() = 0;
 };
 
+typedef unique_ptr<PlannerState> PlannerStatePtr;
+
+
+
+#define BUFFER_SIZE 32 // m
+#define BACK_BUFFER_SIZE 15
+#define INC_VELOCITY 0.224
+#define FRONT_SAFE_DISTANCE 35
+
+class Planner {
+
+public:
+  Vehicle* car;
+  Road road;
+  PlannerStatePtr state;
+
+  bool is_too_close();
+
+  bool is_save_to_change_line(double lane);
+
+public:
+  Planner(Vehicle* car);
+  NextAction check(const Road& road);
+};
 
 };
 

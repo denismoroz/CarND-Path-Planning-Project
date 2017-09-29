@@ -1,6 +1,7 @@
 #ifndef VEHICLE_H
 #define VEHICLE_H
 #include <list>
+#include <vector>
 
 using namespace std;
 
