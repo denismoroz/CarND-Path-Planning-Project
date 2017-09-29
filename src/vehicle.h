@@ -72,7 +72,7 @@ public:
    };
 
    void update(double x, double y, double v, double s, double d, double yaw) {
-     _x = s;
+     _x = x;
      _y = y;
      _v = v;
      _s = s;
@@ -120,6 +120,15 @@ public:
    double get_lane() const {
      return _lane;
    };
+
+   double get_end_path_s() const {
+     return _end_path_s;
+   }
+
+   double get_end_path_d() const {
+     return _end_path_d;
+   }
+
 
    vector <double> get_previous_x() const {
      return _previous_x;

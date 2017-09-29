@@ -1,7 +1,31 @@
 # CarND-Path-Planning-Project
 Self-Driving Car Engineer Nanodegree Program
+
+## Path Planning Project
+
+### Model
+During implementation I followed way described in [Udacity Preview for this project](https://youtu.be/7sI3VHFPP0w).
+Based on latest car position taken from either from previously generated path, or current car position and 3 points that 
+are in front of the car on 30, 60, 90 meters distance and using [spline library](http://kluge.in-chemnitz.de/opensource/spline/) 
+model generated trajectory. Then to avoid jerks, point coordinates for next 30 meters were generated with respect to desired velocity.
+Please, take a look at src/planner.cpp:102 for more details. Lane position of the car as well as velocity 
+is used to generate trajectory, to start car moving on a highway, state machine developed that generates 
+line and velocity change based current state on the road. 
+
+### State machine
+In this project I implemented a very basic state machine with 2 states: KeepLaneState, ChangeLaneState.
+If car follows line till it is not slow down by front car. As soon as it slowed down by any vehicle, model tries to 
+check if it possible to change lane to left or right. If it possible, state is switched to ChangeLane,
+If no, speed of the car is starting to reduce, till there is a possibility appeared to change a lane.
+Lane considered is safe for lane change if there are no cars in 30 meters before car or after.
+
+### Results
+Using this basic model car is able to drive 4.32 m without incident [YouTube](https://youtu.be/rYkqI1hflpk)
+
+
+#Original Udacity ReadMe
    
-### Simulator.
+### Simulator
 You can download the Term3 Simulator which contains the Path Planning Project from the [releases tab (https://github.com/udacity/self-driving-car-sim/releases).
 
 ### Goals

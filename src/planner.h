@@ -3,6 +3,7 @@
 
 #include "vehicle.h"
 #include "road.h"
+#include "map.h"
 
 using namespace std;
 
@@ -45,25 +46,42 @@ public:
 typedef unique_ptr<PlannerState> PlannerStatePtr;
 
 
-
-#define BACK_BUFFER_SIZE 15
+#define BUFFER_SIZE 35
+#define BACK_BUFFER_SIZE 7
 #define INC_VELOCITY 0.224
-#define FRONT_SAFE_DISTANCE 40
+#define FRONT_SAFE_DISTANCE 30
+#define MAX_SPEED 49.5
 
 class Planner {
+
+  double _velocity = 0;
+  vector<double> _next_x_vals;
+  vector<double> _next_y_vals;
+
+  void _generate_path(int lane);
+
+  void _update_velocity(double change);
 
 public:
   Vehicle* car;
   Road road;
   PlannerStatePtr state;
+  Map* map;
 
   bool is_too_close();
 
   bool is_save_to_change_line(double lane);
 
 public:
-  Planner(Vehicle* car);
-  NextAction check(const Road& road);
+  Planner(Vehicle* car, Map* map);
+  void check(const Road& road);
+
+  vector<double> get_next_x_vals()  {
+    return _next_x_vals;
+  }
+  vector<double> get_next_y_vals() {
+    return _next_y_vals;
+  }
 };
 
 };
